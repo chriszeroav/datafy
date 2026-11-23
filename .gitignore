@@ -43,5 +43,6 @@ next-env.d.ts
 # la plantilla de variables si se commitea; las claves reales no
 !.env.example
 
-# archivos subidos por el usuario (solo local)
-/uploads/
+
+# cliente de prisma generado: se recrea con "pnpm prisma generate"
+/src/generated/

@@ -1,0 +1,37 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// de que billetera viene la captura
+enum PaymentSource {
+  YAPE
+  PLIN
+}
+
+// si el dinero entro o salio
+enum PaymentDirection {
+  INCOMING
+  OUTGOING
+}
+
+// La imagen no se almacena: solo lo que se leyo de ella. Por eso la fila
+// nace ya completa, despues de una extraccion exitosa, y todo es obligatorio.
+model Payment {
+  id String @id @default(cuid())
+
+  operationCode String
+  source        PaymentSource
+  direction     PaymentDirection
+  amount        Decimal          @db.Decimal(10, 2)
+  operatedAt    DateTime
+
+  createdAt DateTime @default(now())
+
+  // la misma constancia no entra dos veces
+  @@unique([source, operationCode])
+}
