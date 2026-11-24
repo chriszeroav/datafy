@@ -1,47 +1,58 @@
-import { ShieldCheck } from "lucide-react";
 import { Suspense } from "react";
 import {
-  PaymentList,
-  PaymentListSkeleton,
-} from "@/features/payments/payment-list";
+  PaymentsPanel,
+  PaymentsPanelSkeleton,
+} from "@/features/payments/payments-panel";
 import { UploadForm } from "@/features/payments/upload-form";
 
 // La logica vive en features/: la pagina solo compone y decide el layout.
 const HomePage = () => (
-  <main className="relative min-h-dvh overflow-hidden px-4 py-10 sm:px-6">
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-      <div className="absolute -top-32 -left-24 size-72 rounded-full bg-violet-600/30 blur-3xl sm:size-[28rem]" />
-      <div className="absolute -right-24 -bottom-32 size-72 rounded-full bg-emerald-500/25 blur-3xl sm:size-[28rem]" />
-    </div>
+  // El pb generoso evita que la burbuja flotante tape la ultima fila.
+  <main className="relative min-h-dvh px-4 pt-10 pb-24 sm:px-6 lg:pt-16">
+    {/* Papel rayado muy tenue, como el fondo de un talonario */}
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 -z-10 opacity-[0.55] [background-image:repeating-linear-gradient(to_bottom,transparent_0px,transparent_31px,var(--border)_31px,var(--border)_32px)]"
+    />
 
-    <div className="mx-auto w-full max-w-xl">
-      <header className="mb-8 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
-          <ShieldCheck className="size-3.5 text-emerald-500" />
-          La imagen no se guarda, solo sus datos
-        </span>
-        <h1 className="mt-4 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-emerald-500 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
-          Datafy
-        </h1>
-        <p className="mt-2 text-sm text-pretty text-muted-foreground sm:text-base">
-          Sube una constancia de Yape o Plin y extrae sus datos.
+    <div className="mx-auto w-full max-w-5xl">
+      <header className="mb-10 flex flex-wrap items-end justify-between gap-4 border-b-2 border-dashed border-border pb-6">
+        <div>
+          <h1 className="text-5xl font-black tracking-tighter sm:text-6xl">
+            Datafy
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tus constancias de Yape y Plin, convertidas en datos.
+          </p>
+        </div>
+
+        {/* Sello de goma: el guiño que le da caracter a la cabecera */}
+        <p className="-rotate-3 rounded-md border-2 border-yape/70 px-3 py-1.5 text-center text-[0.7rem] leading-tight font-bold tracking-[0.18em] text-yape/80 uppercase">
+          Sin guardar
+          <br />
+          la imagen
         </p>
       </header>
 
-      <UploadForm />
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)]">
+        <div className="lg:sticky lg:top-8">
+          <UploadForm />
+        </div>
 
-      <h2 className="mt-10 mb-3 text-sm font-medium text-muted-foreground">
-        Pagos registrados
-      </h2>
+        <section>
+          <h2 className="mb-3 text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+            Constancias registradas
+          </h2>
+          {/* Sin "use cache": la lista se lee fresca en cada peticion y el
+              shell prerenderizado muestra el esqueleto mientras llega. */}
+          <Suspense fallback={<PaymentsPanelSkeleton />}>
+            <PaymentsPanel />
+          </Suspense>
+        </section>
+      </div>
 
-      {/* Sin "use cache": la lista se lee fresca en cada peticion y el shell
-          prerenderizado muestra el esqueleto mientras llega. */}
-      <Suspense fallback={<PaymentListSkeleton />}>
-        <PaymentList />
-      </Suspense>
-
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        Paso 6 de 8, faltan las validaciones y los evals
+      <p className="mt-12 text-center font-mono text-[0.7rem] tracking-wider text-muted-foreground uppercase">
+        Paso 6 de 8 · faltan validaciones y evals
       </p>
     </div>
   </main>

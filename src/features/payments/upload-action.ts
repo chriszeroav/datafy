@@ -55,7 +55,7 @@ export const uploadScreenshot = async (
     const outcome = await savePayment(payment);
 
     if (!outcome.saved) {
-      return { status: "duplicate", payment };
+      return { status: "duplicate", payment, usage };
     }
 
     // La lista se lee fresca en cada peticion, asi que no hay cache que
@@ -67,7 +67,7 @@ export const uploadScreenshot = async (
       fileName: file.name,
       sizeBytes: bytes.byteLength,
       payment,
-      tokens: usage.totalTokens ?? 0,
+      usage,
     };
   } catch (error) {
     // Falla si el modelo no responde o si devuelve algo que Zod rechaza.

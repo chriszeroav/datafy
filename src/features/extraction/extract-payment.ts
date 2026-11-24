@@ -1,6 +1,16 @@
-import { generateObject } from "ai";
+import { generateObject, type LanguageModelUsage } from "ai";
 import { getModel } from "@/lib/ai";
 import { paymentExtractionSchema } from "./payment-schema";
+import type { TokenUsage } from "./token-usage";
+
+// Todos los campos del SDK son opcionales porque no todo proveedor los informa.
+const toTokenUsage = (usage: LanguageModelUsage): TokenUsage => ({
+  input: usage.inputTokens ?? 0,
+  cachedInput: usage.inputTokenDetails.cacheReadTokens ?? 0,
+  output: usage.outputTokens ?? 0,
+  reasoning: usage.outputTokenDetails.reasoningTokens ?? 0,
+  total: usage.totalTokens ?? 0,
+});
 
 const SYSTEM_PROMPT = `Eres un extractor de datos de constancias de pago peruanas (Yape y Plin).
 Lee la imagen y devuelve unicamente los campos del esquema.
@@ -37,5 +47,5 @@ export const extractPayment = async (image: Uint8Array, mediaType: string) => {
     ],
   });
 
-  return { extraction: object, usage };
+  return { extraction: object, usage: toTokenUsage(usage) };
 };
