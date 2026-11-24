@@ -1,7 +1,9 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { extractPayment } from "@/features/extraction/extract-payment";
 import { toOperatedAt } from "@/features/extraction/payment-schema";
+import { savePayment } from "./save-payment";
 import {
   formatBytes,
   isAcceptedMimeType,
@@ -42,17 +44,29 @@ export const uploadScreenshot = async (
   try {
     const { extraction, usage } = await extractPayment(bytes, file.type);
 
+    const payment = {
+      source: extraction.source,
+      direction: extraction.direction,
+      operationCode: extraction.operationCode,
+      amount: extraction.amount,
+      operatedAt: toOperatedAt(extraction).toISOString(),
+    };
+
+    const outcome = await savePayment(payment);
+
+    if (!outcome.saved) {
+      return { status: "duplicate", payment };
+    }
+
+    // La lista se lee fresca en cada peticion, asi que no hay cache que
+    // invalidar: lo que hace falta es que la ruta se vuelva a renderizar.
+    refresh();
+
     return {
       status: "success",
       fileName: file.name,
       sizeBytes: bytes.byteLength,
-      payment: {
-        source: extraction.source,
-        direction: extraction.direction,
-        operationCode: extraction.operationCode,
-        amount: extraction.amount,
-        operatedAt: toOperatedAt(extraction).toISOString(),
-      },
+      payment,
       tokens: usage.totalTokens ?? 0,
     };
   } catch (error) {

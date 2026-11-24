@@ -13,6 +13,8 @@ export type ExtractedPayment = {
 export type UploadResult =
   | { status: "idle" }
   | { status: "error"; message: string }
+  // No es un error: la constancia se leyo bien, pero ya estaba registrada.
+  | { status: "duplicate"; payment: ExtractedPayment }
   | {
       status: "success";
       fileName: string;
