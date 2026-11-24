@@ -1,5 +1,7 @@
 "use server";
 
+import { extractPayment } from "@/features/extraction/extract-payment";
+import { toOperatedAt } from "@/features/extraction/payment-schema";
 import {
   formatBytes,
   isAcceptedMimeType,
@@ -33,14 +35,34 @@ export const uploadScreenshot = async (
     };
   }
 
-  // La imagen se lee en memoria y se descarta al terminar la peticion: no toca
-  // el disco ni la base. En el paso 5 este mismo buffer es lo que vera la IA.
-  const bytes = await file.arrayBuffer();
+  // La imagen se lee en memoria, viaja al modelo y se descarta al terminar la
+  // peticion: no toca el disco ni la base.
+  const bytes = new Uint8Array(await file.arrayBuffer());
 
-  return {
-    status: "success",
-    fileName: file.name,
-    mimeType: file.type,
-    sizeBytes: bytes.byteLength,
-  };
+  try {
+    const { extraction, usage } = await extractPayment(bytes, file.type);
+
+    return {
+      status: "success",
+      fileName: file.name,
+      sizeBytes: bytes.byteLength,
+      payment: {
+        source: extraction.source,
+        direction: extraction.direction,
+        operationCode: extraction.operationCode,
+        amount: extraction.amount,
+        operatedAt: toOperatedAt(extraction).toISOString(),
+      },
+      tokens: usage.totalTokens ?? 0,
+    };
+  } catch (error) {
+    // Falla si el modelo no responde o si devuelve algo que Zod rechaza.
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? `No se pudo leer la constancia: ${error.message}`
+          : "No se pudo leer la constancia.",
+    };
+  }
 };

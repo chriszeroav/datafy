@@ -8,7 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { uploadScreenshot } from "./upload-action";
 import {
   ACCEPTED_MIME_TYPES,
+  formatAmount,
   formatBytes,
+  formatOperatedAt,
   MAX_FILE_SIZE_BYTES,
 } from "./upload-config";
 import { INITIAL_UPLOAD_RESULT } from "./upload-result";
@@ -158,33 +160,66 @@ export const UploadForm = () => {
               )}
 
               {state.status === "success" && (
-                <dl className="mt-4 grid gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 sm:grid-cols-3">
-                  <div className="min-w-0">
-                    <dt className="text-xs text-muted-foreground">Archivo</dt>
-                    <dd className="truncate text-sm font-medium">
-                      {state.fileName}
-                    </dd>
+                <section className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="text-3xl font-bold tracking-tight">
+                      {formatAmount(state.payment.amount)}
+                    </p>
+                    <div className="flex gap-2">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                          state.payment.direction === "INCOMING"
+                            ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                            : "bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                        }`}
+                      >
+                        {state.payment.direction === "INCOMING"
+                          ? "Ingreso"
+                          : "Egreso"}
+                      </span>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                          state.payment.source === "YAPE"
+                            ? "bg-violet-500/20 text-violet-700 dark:text-violet-300"
+                            : "bg-teal-500/20 text-teal-700 dark:text-teal-300"
+                        }`}
+                      >
+                        {state.payment.source}
+                      </span>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs text-muted-foreground">Tipo</dt>
-                    <dd className="truncate text-sm font-medium">
-                      {state.mimeType}
-                    </dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs text-muted-foreground">Peso</dt>
-                    <dd className="text-sm font-medium">
-                      {formatBytes(state.sizeBytes)}
-                    </dd>
-                  </div>
-                </dl>
+
+                  <dl className="mt-4 grid gap-3 border-t border-emerald-500/20 pt-3 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <dt className="text-xs text-muted-foreground">
+                        Codigo de operacion
+                      </dt>
+                      <dd className="truncate font-mono text-sm font-medium">
+                        {state.payment.operationCode}
+                      </dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-xs text-muted-foreground">
+                        Fecha de la operacion
+                      </dt>
+                      <dd className="text-sm font-medium">
+                        {formatOperatedAt(state.payment.operatedAt)}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <p className="mt-3 truncate text-xs text-muted-foreground">
+                    {state.fileName} · {formatBytes(state.sizeBytes)} ·{" "}
+                    {state.tokens} tokens
+                  </p>
+                </section>
               )}
             </div>
           </CardContent>
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Paso 3 de 8, la extraccion con IA llega en el paso 5
+          Paso 5 de 8, los datos todavia no se guardan
         </p>
       </div>
     </main>

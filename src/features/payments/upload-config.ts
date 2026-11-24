@@ -20,3 +20,22 @@ export const formatBytes = (bytes: number): string => {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 };
+
+const amountFormatter = new Intl.NumberFormat("es-PE", {
+  style: "currency",
+  currency: "PEN",
+});
+
+export const formatAmount = (amount: number): string =>
+  amountFormatter.format(amount);
+
+// Se guarda en UTC y se muestra en hora de Lima: el viaje de ida y vuelta
+// tiene que devolver la hora que decia la captura.
+const operatedAtFormatter = new Intl.DateTimeFormat("es-PE", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "America/Lima",
+});
+
+export const formatOperatedAt = (isoDate: string): string =>
+  operatedAtFormatter.format(new Date(isoDate));
