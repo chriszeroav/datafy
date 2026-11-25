@@ -1,4 +1,5 @@
 import { Inbox } from "lucide-react";
+import { aiModelLabel } from "@/lib/ai-models";
 import { db } from "@/lib/db";
 import { Ticket, TicketPerforation, TicketRow } from "./ticket";
 import { formatAmount, formatOperatedAt } from "./upload-config";
@@ -65,6 +66,9 @@ export const PaymentsPanel = async () => {
               <th className="hidden px-1 pb-2 font-semibold sm:table-cell">
                 Operacion
               </th>
+              <th className="hidden px-1 pb-2 font-semibold md:table-cell">
+                Modelo
+              </th>
               <th className="px-1 pb-2 text-right font-semibold">Monto</th>
             </tr>
           </thead>
@@ -81,7 +85,10 @@ export const PaymentsPanel = async () => {
                   <SourceTag source={payment.source} />
                 </td>
                 <td className="hidden px-1 py-2.5 font-mono text-xs text-muted-foreground sm:table-cell">
-                  {payment.operationCode}
+                  {payment.operationCode ?? "—"}
+                </td>
+                <td className="hidden px-1 py-2.5 text-xs whitespace-nowrap text-muted-foreground md:table-cell">
+                  {aiModelLabel(payment.model)}
                 </td>
                 <td
                   className={`px-1 py-2.5 text-right font-mono font-medium tabular-nums whitespace-nowrap ${

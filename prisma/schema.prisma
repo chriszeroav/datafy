@@ -24,14 +24,20 @@ enum PaymentDirection {
 model Payment {
   id String @id @default(cuid())
 
-  operationCode String
+  // null en el detalle de movimiento de Interbank, que no lo muestra
+  operationCode String?
   source        PaymentSource
   direction     PaymentDirection
   amount        Decimal          @db.Decimal(10, 2)
   operatedAt    DateTime
 
+  // id del catalogo de modelos (src/lib/ai-models.ts) que leyo la captura,
+  // para poder comparar despues que modelo se equivoca menos
+  model String
+
   createdAt DateTime @default(now())
 
-  // la misma constancia no entra dos veces
+  // la misma constancia no entra dos veces. Postgres no compara los null entre
+  // si, asi que las filas sin codigo se deduplican en save-payment.ts
   @@unique([source, operationCode])
 }

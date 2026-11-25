@@ -2,7 +2,8 @@
 
 import { refresh } from "next/cache";
 import { extractPayment } from "@/features/extraction/extract-payment";
-import { toOperatedAt } from "@/features/extraction/payment-schema";
+import { interpretExtraction } from "@/features/extraction/payment-schema";
+import { resolveModelId } from "@/lib/ai";
 import { savePayment } from "./save-payment";
 import {
   formatBytes,
@@ -40,16 +41,30 @@ export const uploadScreenshot = async (
   // La imagen se lee en memoria, viaja al modelo y se descarta al terminar la
   // peticion: no toca el disco ni la base.
   const bytes = new Uint8Array(await file.arrayBuffer());
+  const modelId = resolveModelId(formData.get("model"));
 
   try {
-    const { extraction, usage } = await extractPayment(bytes, file.type);
+    const { extraction, usage } = await extractPayment(
+      bytes,
+      file.type,
+      modelId,
+    );
 
+    const interpretation = interpretExtraction(extraction);
+
+    if (!interpretation.ok) {
+      return {
+        status: "error",
+        message: `No se pudo leer la constancia: ${interpretation.reason}`,
+        usage,
+      };
+    }
+
+    const { operatedAt, ...fields } = interpretation.payment;
     const payment = {
-      source: extraction.source,
-      direction: extraction.direction,
-      operationCode: extraction.operationCode,
-      amount: extraction.amount,
-      operatedAt: toOperatedAt(extraction).toISOString(),
+      ...fields,
+      operatedAt: operatedAt.toISOString(),
+      model: modelId,
     };
 
     const outcome = await savePayment(payment);

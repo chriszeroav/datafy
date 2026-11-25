@@ -12,6 +12,12 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import type { TokenUsage } from "@/features/extraction/token-usage";
+import {
+  AI_MODEL_IDS,
+  AI_MODELS,
+  aiModelLabel,
+  DEFAULT_AI_MODEL_ID,
+} from "@/lib/ai-models";
 import { Ticket, TicketPerforation } from "./ticket";
 import { TokenMeter } from "./token-meter";
 import { uploadScreenshot } from "./upload-action";
@@ -33,13 +39,15 @@ const PaymentSummary = ({ payment }: { payment: ExtractedPayment }) => (
       {formatAmount(payment.amount)}
     </span>
     <span className="font-mono text-xs text-muted-foreground">
-      {payment.source} · {payment.operationCode}
+      {payment.source} · {payment.operationCode ?? "sin nro."} ·{" "}
+      {aiModelLabel(payment.model)}
     </span>
   </p>
 );
 
 export const UploadForm = () => {
   const inputId = useId();
+  const modelSelectId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const previewUrl = useRef<string | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -75,8 +83,9 @@ export const UploadForm = () => {
     if (countedResult.current === state) return;
     countedResult.current = state;
 
-    if (state.status === "success" || state.status === "duplicate") {
-      setUsageHistory((history) => [...history, state.usage]);
+    if ("usage" in state && state.usage) {
+      const { usage } = state;
+      setUsageHistory((history) => [...history, usage]);
     }
 
     // Tras guardar, el formulario queda listo para la siguiente captura.
@@ -167,6 +176,30 @@ export const UploadForm = () => {
               </Button>
             </div>
           )}
+
+          <div className="flex items-center justify-between gap-3">
+            <label
+              htmlFor={modelSelectId}
+              className="text-xs tracking-wider text-muted-foreground uppercase"
+            >
+              Modelo
+            </label>
+            {/* Sin estado propio: el select es no controlado y viaja en el
+                FormData. El servidor valida el id contra el catalogo. */}
+            <select
+              id={modelSelectId}
+              name="model"
+              defaultValue={DEFAULT_AI_MODEL_ID}
+              disabled={isPending}
+              className="h-8 min-w-0 rounded-md border border-border bg-card px-2 font-mono text-xs transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-60"
+            >
+              {AI_MODEL_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {AI_MODELS[id].label}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <Button
             type="submit"
